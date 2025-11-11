@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Entity Framework
+Migrations/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Ambiente
+appsettings.Development.json
+appsettings.Production.json
+
+# Outros
+.DS_Store
+*.swp
+*.swo

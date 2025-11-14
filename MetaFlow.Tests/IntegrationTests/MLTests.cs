@@ -16,14 +16,11 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task GerarRecomendacoes_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var usuarioId = Guid.NewGuid();
 
-            // Act
             var response = await client.GetAsync($"/api/v2/recomendacoes/usuario/{usuarioId}");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.BadRequest,
@@ -34,27 +31,21 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task StatusServicoML_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
 
-            // Act
             var response = await client.GetAsync("/api/v2/recomendacoes/status");
 
-            // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         [Fact]
         public async Task AnalisarPadroes_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var usuarioId = Guid.NewGuid();
 
-            // Act
             var response = await client.GetAsync($"/api/v2/analises/usuario/{usuarioId}/padroes");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.Forbidden,

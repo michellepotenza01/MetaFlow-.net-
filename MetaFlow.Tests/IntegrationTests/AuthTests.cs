@@ -18,7 +18,6 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task Login_WithInvalidCredentials_ReturnsUnauthorized()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var loginRequest = new LoginRequest
             {
@@ -26,36 +25,28 @@ namespace MetaFlow.Tests.IntegrationTests
                 Senha = "WrongPassword123!"
             };
 
-            // Act
             var response = await client.PostAsJsonAsync("/api/v1/auth/login", loginRequest);
 
-            // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
         [Fact]
         public async Task ValidateToken_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
 
-            // Act
             var response = await client.GetAsync("/api/v1/auth/validate");
 
-            // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         [Fact]
         public async Task GetCurrentUser_ReturnsUserInfo()
         {
-            // Arrange
             var client = _factory.CreateClient();
 
-            // Act
             var response = await client.GetAsync("/api/v2/auth/me");
 
-            // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
     }

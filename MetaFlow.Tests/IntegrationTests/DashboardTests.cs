@@ -16,14 +16,11 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task GetDashboardUsuario_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var usuarioId = Guid.NewGuid();
 
-            // Act
             var response = await client.GetAsync($"/api/v1/dashboard/usuario/{usuarioId}");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.Forbidden,
@@ -34,14 +31,11 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task GetQuickStats_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var usuarioId = Guid.NewGuid();
 
-            // Act
             var response = await client.GetAsync($"/api/v2/dashboard/usuario/{usuarioId}/quick-stats");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.Forbidden,
@@ -52,14 +46,11 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task GetAlertas_ReturnsSuccess()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var usuarioId = Guid.NewGuid();
 
-            // Act
             var response = await client.GetAsync($"/api/v2/dashboard/usuario/{usuarioId}/alertas");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.Forbidden,

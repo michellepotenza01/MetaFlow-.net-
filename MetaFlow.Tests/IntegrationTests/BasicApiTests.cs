@@ -34,7 +34,6 @@ namespace MetaFlow.Tests.IntegrationTests
         {
             var client = _factory.CreateClient();
             
-            // Testa endpoints básicos com status esperados
             var endpoints = new[]
             {
                 "/api/v1/meta",

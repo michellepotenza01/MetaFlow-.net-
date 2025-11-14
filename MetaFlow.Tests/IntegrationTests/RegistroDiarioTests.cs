@@ -16,13 +16,10 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task GetRegistros_ReturnsExpectedStatus()
         {
-            // Arrange
             var client = _factory.CreateClient();
 
-            // Act
             var response = await client.GetAsync("/api/v1/registro-diario");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.NoContent ||
@@ -34,14 +31,11 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task GetRegistrosByUsuario_ReturnsExpectedStatus()
         {
-            // Arrange
             var client = _factory.CreateClient();
             var usuarioId = Guid.NewGuid();
 
-            // Act
             var response = await client.GetAsync($"/api/v1/registro-diario/usuario/{usuarioId}");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.NoContent ||

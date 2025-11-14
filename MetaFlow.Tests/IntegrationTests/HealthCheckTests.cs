@@ -16,13 +16,10 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task HealthCheck_ReturnsExpectedStatus()
         {
-            // Arrange
             var client = _factory.CreateClient();
 
-            // Act
             var response = await client.GetAsync("/api/v1/health");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.ServiceUnavailable,
@@ -33,13 +30,10 @@ namespace MetaFlow.Tests.IntegrationTests
         [Fact]
         public async Task HealthCheckV2_ReturnsExpectedStatus()
         {
-            // Arrange
             var client = _factory.CreateClient();
 
-            // Act
             var response = await client.GetAsync("/api/v2/health");
 
-            // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.OK ||
                 response.StatusCode == HttpStatusCode.ServiceUnavailable,

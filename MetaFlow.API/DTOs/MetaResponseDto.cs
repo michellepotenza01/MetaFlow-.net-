@@ -1,5 +1,6 @@
 using Swashbuckle.AspNetCore.Annotations;
 using MetaFlow.API.Enums;
+using MetaFlow.API.Models.Common;
 
 namespace MetaFlow.API.DTOs
 {
@@ -37,6 +38,12 @@ namespace MetaFlow.API.DTOs
         public int DiasRestantes { get; set; }
 
         [SwaggerSchema("Indica se a meta está atrasada")]
-        public string EstaAtrasada { get; set; } = "Não";
+        public bool EstaAtrasada { get; set; }
+
+        [SwaggerSchema("Links HATEOAS para operações relacionadas")]
+        public List<Link> Links { get; set; } = new List<Link>();
+
+        [SwaggerSchema("Indica se a meta pode ser concluída")]
+        public bool PodeSerConcluida { get; set; }
     }
 }

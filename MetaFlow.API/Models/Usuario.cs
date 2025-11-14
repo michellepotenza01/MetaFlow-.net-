@@ -39,7 +39,7 @@ namespace MetaFlow.API.Models
         public string? ObjetivoProfissional { get; set; }
 
         [SwaggerSchema("Data de criação do registro")]
-        public DateTime CriadoEm { get; set; } = DateTime.Now;
+        public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
         [SwaggerSchema("Data da última atualização")]
         public DateTime AtualizadoEm { get; set; } = DateTime.Now;

@@ -2,6 +2,7 @@ using MetaFlow.API.Models;
 using MetaFlow.API.DTOs;
 using MetaFlow.API.Repositories;
 using MetaFlow.API.Models.Common;
+using MetaFlow.API.Enums;
 
 namespace MetaFlow.API.Services
 {
@@ -24,17 +25,20 @@ namespace MetaFlow.API.Services
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IMetaRepository _metaRepository;
         private readonly IRegistroDiarioRepository _registroRepository;
+        private readonly ILogger<ResumoMensalService> _logger;
 
         public ResumoMensalService(
             IResumoMensalRepository resumoRepository,
             IUsuarioRepository usuarioRepository,
             IMetaRepository metaRepository,
-            IRegistroDiarioRepository registroRepository)
+            IRegistroDiarioRepository registroRepository,
+            ILogger<ResumoMensalService> logger)
         {
             _resumoRepository = resumoRepository;
             _usuarioRepository = usuarioRepository;
             _metaRepository = metaRepository;
             _registroRepository = registroRepository;
+            _logger = logger;
         }
 
         public async Task<ServiceResponse<PagedResponse<ResumoMensal>>> GetResumosPagedAsync(PaginationParams paginationParams)
@@ -42,11 +46,19 @@ namespace MetaFlow.API.Services
             try
             {
                 var result = await _resumoRepository.GetAllPagedAsync(paginationParams);
-                var pagedResponse = new PagedResponse<ResumoMensal>(result.Resumos, paginationParams.PageNumber, paginationParams.PageSize, result.TotalCount, new List<Link>());
+                
+                var pagedResponse = new PagedResponse<ResumoMensal>(
+                    result.Resumos, 
+                    paginationParams.PageNumber, 
+                    paginationParams.PageSize, 
+                    result.TotalCount, 
+                    new List<Link>() 
+                );
                 return ServiceResponse<PagedResponse<ResumoMensal>>.Ok(pagedResponse, "Resumos mensais recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar resumos paginados");
                 return ServiceResponse<PagedResponse<ResumoMensal>>.Error($"Erro ao buscar resumos: {ex.Message}");
             }
         }
@@ -60,11 +72,19 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<PagedResponse<ResumoMensal>>.NotFound("Usuário");
 
                 var result = await _resumoRepository.GetByUsuarioPagedAsync(usuarioId, paginationParams);
-                var pagedResponse = new PagedResponse<ResumoMensal>(result.Resumos, paginationParams.PageNumber, paginationParams.PageSize, result.TotalCount, new List<Link>());
+                
+                var pagedResponse = new PagedResponse<ResumoMensal>(
+                    result.Resumos, 
+                    paginationParams.PageNumber, 
+                    paginationParams.PageSize, 
+                    result.TotalCount, 
+                    new List<Link>() 
+                );
                 return ServiceResponse<PagedResponse<ResumoMensal>>.Ok(pagedResponse, "Resumos do usuário recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar resumos paginados do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<PagedResponse<ResumoMensal>>.Error($"Erro ao buscar resumos do usuário: {ex.Message}");
             }
         }
@@ -78,10 +98,12 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<List<ResumoMensal>>.NotFound("Usuário");
 
                 var resumos = await _resumoRepository.GetByUsuarioAsync(usuarioId);
+                
                 return ServiceResponse<List<ResumoMensal>>.Ok(resumos, "Resumos do usuário recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar resumos do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<List<ResumoMensal>>.Error($"Erro ao buscar resumos do usuário: {ex.Message}");
             }
         }
@@ -91,12 +113,14 @@ namespace MetaFlow.API.Services
             try
             {
                 var resumo = await _resumoRepository.GetByIdAsync(id);
-                return resumo is null 
-                    ? ServiceResponse<ResumoMensal>.NotFound("Resumo mensal")
-                    : ServiceResponse<ResumoMensal>.Ok(resumo, "Resumo encontrado com sucesso");
+                if (resumo is null)
+                    return ServiceResponse<ResumoMensal>.NotFound("Resumo mensal");
+
+                return ServiceResponse<ResumoMensal>.Ok(resumo, "Resumo encontrado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar resumo {ResumoId}", id);
                 return ServiceResponse<ResumoMensal>.Error($"Erro ao buscar resumo: {ex.Message}");
             }
         }
@@ -110,12 +134,14 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<ResumoMensal>.NotFound("Usuário");
 
                 var resumo = await _resumoRepository.GetByUsuarioAndPeriodoAsync(usuarioId, ano, mes);
-                return resumo is null 
-                    ? ServiceResponse<ResumoMensal>.NotFound("Resumo para este período")
-                    : ServiceResponse<ResumoMensal>.Ok(resumo, "Resumo do período encontrado com sucesso");
+                if (resumo is null)
+                    return ServiceResponse<ResumoMensal>.NotFound("Resumo para este período");
+
+                return ServiceResponse<ResumoMensal>.Ok(resumo, "Resumo do período encontrado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar resumo do período {Mes}/{Ano} para usuário {UsuarioId}", mes, ano, usuarioId);
                 return ServiceResponse<ResumoMensal>.Error($"Erro ao buscar resumo do período: {ex.Message}");
             }
         }
@@ -155,10 +181,12 @@ namespace MetaFlow.API.Services
                 };
 
                 await _resumoRepository.AddAsync(resumo);
+        
                 return ServiceResponse<ResumoMensal>.Ok(resumo, "Resumo mensal criado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao criar resumo para usuário {UsuarioId} - {Mes}/{Ano}", usuarioId, mes, ano);
                 return ServiceResponse<ResumoMensal>.Error($"Erro ao criar resumo: {ex.Message}");
             }
         }
@@ -172,10 +200,14 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<bool>.NotFound("Resumo mensal");
 
                 await _resumoRepository.DeleteAsync(resumo);
+                
+                _logger.LogInformation("Resumo excluído: {ResumoId}", id);
+                
                 return ServiceResponse<bool>.Ok(true, "Resumo mensal excluído com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao excluir resumo {ResumoId}", id);
                 return ServiceResponse<bool>.Error($"Erro ao excluir resumo: {ex.Message}");
             }
         }
@@ -189,12 +221,14 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<ResumoMensal>.NotFound("Usuário");
 
                 var resumo = await _resumoRepository.GetUltimoResumoByUsuarioAsync(usuarioId);
-                return resumo is null 
-                    ? ServiceResponse<ResumoMensal>.NotFound("Resumo mensal")
-                    : ServiceResponse<ResumoMensal>.Ok(resumo, "Último resumo recuperado com sucesso");
+                if (resumo is null)
+                    return ServiceResponse<ResumoMensal>.NotFound("Resumo mensal");
+
+                return ServiceResponse<ResumoMensal>.Ok(resumo, "Último resumo recuperado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar último resumo do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<ResumoMensal>.Error($"Erro ao buscar último resumo: {ex.Message}");
             }
         }
@@ -215,7 +249,7 @@ namespace MetaFlow.API.Services
 
                 var totalRegistros = registros.Count;
                 var metasConcluidasNoMes = metas.Count(m => 
-                    m.Status == "Concluída" && 
+                    m.Status == StatusMeta.Concluida && 
                     m.CriadoEm.Month == mes && 
                     m.CriadoEm.Year == ano);
 
@@ -242,6 +276,7 @@ namespace MetaFlow.API.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao calcular resumo para usuário {UsuarioId} - {Mes}/{Ano}", usuarioId, mes, ano);
                 return ServiceResponse<object>.Error($"Erro ao calcular resumo: {ex.Message}");
             }
         }

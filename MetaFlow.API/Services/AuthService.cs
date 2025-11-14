@@ -4,16 +4,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BCrypt.Net;
 using MetaFlow.API.Models;
-using MetaFlow.API.Models.Common;
+using MetaFlow.API.DTOs;
 
 namespace MetaFlow.API.Services
 {
     public interface IAuthService
     {
         Task<ServiceResponse<LoginResponse>> LoginAsync(LoginRequest request);
-        Task<ServiceResponse<bool>> RegistrarAsync(Usuario usuario, string senha);
+        Task<ServiceResponse<Usuario>> RegistrarAsync(UsuarioRequestDto usuarioDto);
         string HashPassword(string password);
         bool VerifyPassword(string password, string passwordHash);
     }
@@ -44,6 +43,7 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<LoginResponse>.Error("Credenciais inválidas");
 
                 var token = GenerateJwtToken(usuario);
+                
                 return ServiceResponse<LoginResponse>.Ok(token, "Login realizado com sucesso");
             }
             catch (Exception ex)
@@ -52,23 +52,32 @@ namespace MetaFlow.API.Services
             }
         }
 
-        public async Task<ServiceResponse<bool>> RegistrarAsync(Usuario usuario, string senha)
+        public async Task<ServiceResponse<Usuario>> RegistrarAsync(UsuarioRequestDto usuarioDto)
         {
             try
             {
-                if (await _usuarioRepository.EmailExistsAsync(usuario.Email))
-                    return ServiceResponse<bool>.Conflict("Email já cadastrado");
+                if (await _usuarioRepository.EmailExistsAsync(usuarioDto.Email))
+                    return ServiceResponse<Usuario>.Conflict("Email já cadastrado");
 
-                usuario.SenhaHash = HashPassword(senha);
-                usuario.CriadoEm = DateTime.Now;
-                usuario.AtualizadoEm = DateTime.Now;
+                var usuario = new Usuario
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = usuarioDto.Nome.Trim(),
+                    Email = usuarioDto.Email.Trim(),
+                    SenhaHash = HashPassword(usuarioDto.Senha),
+                    Profissao = usuarioDto.Profissao?.Trim(),
+                    ObjetivoProfissional = usuarioDto.ObjetivoProfissional?.Trim(),
+                    CriadoEm = DateTime.UtcNow,
+                    AtualizadoEm = DateTime.UtcNow
+                };
 
                 await _usuarioRepository.AddAsync(usuario);
-                return ServiceResponse<bool>.Ok(true, "Usuário registrado com sucesso");
+                
+                return ServiceResponse<Usuario>.Ok(usuario, "Usuário registrado com sucesso");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<bool>.Error($"Erro durante registro: {ex.Message}");
+                return ServiceResponse<Usuario>.Error($"Erro durante registro: {ex.Message}");
             }
         }
 
@@ -78,21 +87,19 @@ namespace MetaFlow.API.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             
-            var expires = DateTime.Now.AddHours(24);
+            var expires = DateTime.UtcNow.AddHours(24);
 
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Nome),
                 new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("iss", _configuration["Jwt:Issuer"] ?? "MetaFlowAPI"),
-                new Claim("aud", _configuration["Jwt:Audience"] ?? "MetaFlowClient")
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: _configuration["Jwt:Issuer"] ?? "MetaFlowAPI",
+                audience: _configuration["Jwt:Audience"] ?? "MetaFlowClient",
                 claims: claims,
                 expires: expires,
                 signingCredentials: creds);

@@ -24,11 +24,13 @@ namespace MetaFlow.API.Services
     {
         private readonly IRegistroDiarioRepository _registroRepository;
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly ILogger<RegistroDiarioService> _logger;
 
-        public RegistroDiarioService(IRegistroDiarioRepository registroRepository, IUsuarioRepository usuarioRepository)
+        public RegistroDiarioService(IRegistroDiarioRepository registroRepository, IUsuarioRepository usuarioRepository, ILogger<RegistroDiarioService> logger)
         {
             _registroRepository = registroRepository;
             _usuarioRepository = usuarioRepository;
+            _logger = logger;
         }
 
         public async Task<ServiceResponse<PagedResponse<RegistroDiario>>> GetRegistrosPagedAsync(PaginationParams paginationParams)
@@ -36,11 +38,19 @@ namespace MetaFlow.API.Services
             try
             {
                 var result = await _registroRepository.GetAllPagedAsync(paginationParams);
-                var pagedResponse = new PagedResponse<RegistroDiario>(result.Registros, paginationParams.PageNumber, paginationParams.PageSize, result.TotalCount, new List<Link>());
+
+                var pagedResponse = new PagedResponse<RegistroDiario>(
+                    result.Registros, 
+                    paginationParams.PageNumber, 
+                    paginationParams.PageSize, 
+                    result.TotalCount, 
+                    new List<Link>() 
+                );
                 return ServiceResponse<PagedResponse<RegistroDiario>>.Ok(pagedResponse, "Registros diários recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar registros paginados");
                 return ServiceResponse<PagedResponse<RegistroDiario>>.Error($"Erro ao buscar registros: {ex.Message}");
             }
         }
@@ -54,11 +64,19 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<PagedResponse<RegistroDiario>>.NotFound("Usuário");
 
                 var result = await _registroRepository.GetByUsuarioPagedAsync(usuarioId, paginationParams);
-                var pagedResponse = new PagedResponse<RegistroDiario>(result.Registros, paginationParams.PageNumber, paginationParams.PageSize, result.TotalCount, new List<Link>());
+                
+                var pagedResponse = new PagedResponse<RegistroDiario>(
+                    result.Registros, 
+                    paginationParams.PageNumber, 
+                    paginationParams.PageSize, 
+                    result.TotalCount, 
+                    new List<Link>() 
+                );
                 return ServiceResponse<PagedResponse<RegistroDiario>>.Ok(pagedResponse, "Registros do usuário recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar registros paginados do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<PagedResponse<RegistroDiario>>.Error($"Erro ao buscar registros do usuário: {ex.Message}");
             }
         }
@@ -75,11 +93,19 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<PagedResponse<RegistroDiario>>.Error("Data de início não pode ser maior que data de fim");
 
                 var result = await _registroRepository.GetByUsuarioAndPeriodoPagedAsync(usuarioId, dataInicio, dataFim, paginationParams);
-                var pagedResponse = new PagedResponse<RegistroDiario>(result.Registros, paginationParams.PageNumber, paginationParams.PageSize, result.TotalCount, new List<Link>());
+                
+                var pagedResponse = new PagedResponse<RegistroDiario>(
+                    result.Registros, 
+                    paginationParams.PageNumber, 
+                    paginationParams.PageSize, 
+                    result.TotalCount, 
+                    new List<Link>() 
+                );
                 return ServiceResponse<PagedResponse<RegistroDiario>>.Ok(pagedResponse, "Registros do período recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar registros do período para usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<PagedResponse<RegistroDiario>>.Error($"Erro ao buscar registros do período: {ex.Message}");
             }
         }
@@ -93,10 +119,12 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<List<RegistroDiario>>.NotFound("Usuário");
 
                 var registros = await _registroRepository.GetByUsuarioAsync(usuarioId);
+                
                 return ServiceResponse<List<RegistroDiario>>.Ok(registros, "Registros do usuário recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar registros do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<List<RegistroDiario>>.Error($"Erro ao buscar registros do usuário: {ex.Message}");
             }
         }
@@ -106,12 +134,14 @@ namespace MetaFlow.API.Services
             try
             {
                 var registro = await _registroRepository.GetByIdAsync(id);
-                return registro is null
-                    ? ServiceResponse<RegistroDiario>.NotFound("Registro diário")
-                    : ServiceResponse<RegistroDiario>.Ok(registro, "Registro encontrado com sucesso");
+                if (registro is null)
+                    return ServiceResponse<RegistroDiario>.NotFound("Registro diário");
+
+                return ServiceResponse<RegistroDiario>.Ok(registro, "Registro encontrado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar registro {RegistroId}", id);
                 return ServiceResponse<RegistroDiario>.Error($"Erro ao buscar registro: {ex.Message}");
             }
         }
@@ -125,12 +155,14 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<RegistroDiario>.NotFound("Usuário");
 
                 var registro = await _registroRepository.GetByUsuarioAndDataAsync(usuarioId, data);
-                return registro is null
-                    ? ServiceResponse<RegistroDiario>.NotFound("Registro para esta data")
-                    : ServiceResponse<RegistroDiario>.Ok(registro, "Registro da data encontrado com sucesso");
+                if (registro is null)
+                    return ServiceResponse<RegistroDiario>.NotFound("Registro para esta data");
+
+                return ServiceResponse<RegistroDiario>.Ok(registro, "Registro da data encontrado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar registro da data {Data} para usuário {UsuarioId}", data, usuarioId);
                 return ServiceResponse<RegistroDiario>.Error($"Erro ao buscar registro da data: {ex.Message}");
             }
         }
@@ -163,10 +195,12 @@ namespace MetaFlow.API.Services
                 };
 
                 await _registroRepository.AddAsync(registro);
+                
                 return ServiceResponse<RegistroDiario>.Ok(registro, "Registro diário criado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao criar registro para usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<RegistroDiario>.Error($"Erro ao criar registro: {ex.Message}");
             }
         }
@@ -193,10 +227,14 @@ namespace MetaFlow.API.Services
                 registroExistente.Anotacoes = registroDto.Anotacoes?.Trim();
 
                 await _registroRepository.UpdateAsync(registroExistente);
+                
+                _logger.LogInformation("Registro atualizado: {RegistroId}", id);
+                
                 return ServiceResponse<RegistroDiario>.Ok(registroExistente, "Registro diário atualizado com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao atualizar registro {RegistroId}", id);
                 return ServiceResponse<RegistroDiario>.Error($"Erro ao atualizar registro: {ex.Message}");
             }
         }
@@ -210,10 +248,14 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<bool>.NotFound("Registro diário");
 
                 await _registroRepository.DeleteAsync(registro);
+                
+                _logger.LogInformation("Registro excluído: {RegistroId}", id);
+                
                 return ServiceResponse<bool>.Ok(true, "Registro diário excluído com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao excluir registro {RegistroId}", id);
                 return ServiceResponse<bool>.Error($"Erro ao excluir registro: {ex.Message}");
             }
         }
@@ -245,6 +287,7 @@ namespace MetaFlow.API.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar estatísticas do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<object>.Error($"Erro ao buscar estatísticas: {ex.Message}");
             }
         }
@@ -258,10 +301,12 @@ namespace MetaFlow.API.Services
                     return ServiceResponse<List<RegistroDiario>>.NotFound("Usuário");
 
                 var registros = await _registroRepository.GetUltimosRegistrosAsync(usuarioId, quantidade);
+                
                 return ServiceResponse<List<RegistroDiario>>.Ok(registros, "Últimos registros recuperados com sucesso");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao buscar últimos registros do usuário {UsuarioId}", usuarioId);
                 return ServiceResponse<List<RegistroDiario>>.Error($"Erro ao buscar últimos registros: {ex.Message}");
             }
         }

@@ -23,6 +23,11 @@ namespace MetaFlow.API.Repositories
         Task<decimal> GetMediaHumorByUsuarioAsync(Guid usuarioId);
         Task<decimal> GetMediaProdutividadeByUsuarioAsync(Guid usuarioId);
         Task<List<RegistroDiario>> GetUltimosRegistrosAsync(Guid usuarioId, int quantidade);
+        
+        Task<int> GetTotalRegistrosAsync();
+        Task<decimal> GetMediaHumorGeralAsync();
+        Task<decimal> GetMediaProdutividadeGeralAsync();
+        Task<Dictionary<DayOfWeek, decimal>> GetProdutividadePorDiaDaSemanaAsync();
     }
 
     public class RegistroDiarioRepository : BaseRepository<RegistroDiario>, IRegistroDiarioRepository
@@ -160,6 +165,37 @@ namespace MetaFlow.API.Repositories
                 .Take(quantidade)
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<int> GetTotalRegistrosAsync()
+        {
+            return await _dbSet.CountAsync();
+        }
+
+        public async Task<decimal> GetMediaHumorGeralAsync()
+        {
+            var media = await _dbSet
+                .Where(r => r.Humor > 0)
+                .AverageAsync(r => (decimal?)r.Humor) ?? 0;
+            return Math.Round(media, 2);
+        }
+
+        public async Task<decimal> GetMediaProdutividadeGeralAsync()
+        {
+            var media = await _dbSet
+                .Where(r => r.Produtividade > 0)
+                .AverageAsync(r => (decimal?)r.Produtividade) ?? 0;
+            return Math.Round(media, 2);
+        }
+
+        public async Task<Dictionary<DayOfWeek, decimal>> GetProdutividadePorDiaDaSemanaAsync()
+        {
+            var produtividadePorDia = await _dbSet
+                .GroupBy(r => r.Data.DayOfWeek)
+                .Select(g => new { Dia = g.Key, Media = g.Average(r => r.Produtividade) })
+                .ToListAsync();
+
+            return produtividadePorDia.ToDictionary(x => x.Dia, x => Math.Round((decimal)x.Media, 2));
         }
     }
 }

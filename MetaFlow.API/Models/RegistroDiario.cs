@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json.Serialization;
+using MetaFlow.API.Converters;
 
 namespace MetaFlow.API.Models
 {
@@ -19,6 +20,7 @@ namespace MetaFlow.API.Models
 
         [Required(ErrorMessage = "A data é obrigatória.")]
         [SwaggerSchema("Data do registro")]
+        [JsonConverter(typeof(FlexibleDateTimeConverter))]
         public DateTime Data { get; set; }
 
         [Required(ErrorMessage = "O nível de humor é obrigatório.")]
@@ -40,15 +42,30 @@ namespace MetaFlow.API.Models
         public string? Anotacoes { get; set; }
 
         [SwaggerSchema("Data de criação")]
-        public DateTime CriadoEm { get; set; } = DateTime.Now;
+        public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
         [ForeignKey("UsuarioId")]
         [JsonIgnore]
         public virtual Usuario Usuario { get; set; } = null!;
 
-        public bool EhDataValida()
+        
+        public string ObterStatusProdutividade() => Produtividade switch
         {
-            return Data.Date <= DateTime.Now.Date;
-        }
+            >= 9 => "Excelente",
+            >= 7 => "Boa", 
+            >= 5 => "Regular",
+            _ => "Baixa"
+        };
+
+        public string ObterStatusHumor() => Humor switch
+        {
+            >= 9 => "Ótimo",
+            >= 7 => "Bom",
+            >= 5 => "Regular", 
+            _ => "Ruim"
+        };
+
+        public string ObterDiaDaSemana() => 
+            Data.ToString("dddd", new System.Globalization.CultureInfo("pt-BR"));
     }
 }

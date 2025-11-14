@@ -19,6 +19,10 @@ namespace MetaFlow.API.Models.Common
         [JsonPropertyName("method")]
         public string Method { get; set; } = "GET";
 
+        [SwaggerSchema("Links de navegação HATEOAS")]
+        [JsonPropertyName("links")]
+        public List<Link> Links { get; set; } = new List<Link>();
+
         public Link() { }
 
         public Link(string href, string rel, string method = "GET")

@@ -1,4 +1,5 @@
 using Swashbuckle.AspNetCore.Annotations;
+using MetaFlow.API.Models.Common;
 
 namespace MetaFlow.API.DTOs
 {
@@ -27,6 +28,15 @@ namespace MetaFlow.API.DTOs
         public DateTime AtualizadoEm { get; set; }
 
         [SwaggerSchema("Indica se tem perfil profissional completo")]
-        public string TemPerfilCompleto { get; set; } = "Não";
+        public bool TemPerfilCompleto { get; set; }
+
+        [SwaggerSchema("Links HATEOAS para operações relacionadas")]
+        public List<Link> Links { get; set; } = new List<Link>();
+
+        [SwaggerSchema("Total de metas do usuário")]
+        public int TotalMetas { get; set; }
+
+        [SwaggerSchema("Total de registros do usuário")]
+        public int TotalRegistros { get; set; }
     }
 }

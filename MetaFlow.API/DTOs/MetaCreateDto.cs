@@ -6,8 +6,8 @@ using System.Text.Json.Serialization;
 
 namespace MetaFlow.API.DTOs
 {
-    [SwaggerSchema("DTO para criação e atualização de metas - Mantido para compatibilidade")]
-    public class MetaRequestDto
+    [SwaggerSchema("DTO para criação de metas")]
+    public class MetaCreateDto
     {
         [Required(ErrorMessage = "O título da meta é obrigatório.")]
         [StringLength(200, MinimumLength = 5, ErrorMessage = "O título deve ter entre 5 e 200 caracteres.")]
@@ -20,20 +20,11 @@ namespace MetaFlow.API.DTOs
 
         [Required(ErrorMessage = "O prazo é obrigatório.")]
         [SwaggerSchema("Data limite para conclusão (formato: YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS)")]
-        [JsonConverter(typeof(FlexibleDateTimeConverter))] 
+        [JsonConverter(typeof(FlexibleDateTimeConverter))]
         public DateTime Prazo { get; set; }
-
-        [Required(ErrorMessage = "O progresso é obrigatório.")]
-        [Range(0, 100, ErrorMessage = "O progresso deve estar entre 0 e 100.")]
-        [SwaggerSchema("Progresso atual (0-100%)")]
-        public int Progresso { get; set; } = 0;
 
         [StringLength(1000, ErrorMessage = "A descrição deve ter no máximo 1000 caracteres.")]
         [SwaggerSchema("Descrição detalhada")]
         public string? Descricao { get; set; }
-
-        [Required(ErrorMessage = "O status é obrigatório.")]
-        [SwaggerSchema("Status da meta")]
-        public StatusMeta Status { get; set; } = StatusMeta.Ativa;
     }
 }

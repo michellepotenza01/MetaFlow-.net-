@@ -1,4 +1,5 @@
 using Swashbuckle.AspNetCore.Annotations;
+using MetaFlow.API.Models.Common;
 
 namespace MetaFlow.API.DTOs
 {
@@ -37,5 +38,8 @@ namespace MetaFlow.API.DTOs
 
         [SwaggerSchema("Dia da semana")]
         public string DiaDaSemana { get; set; } = string.Empty;
+
+        [SwaggerSchema("Links HATEOAS para operações relacionadas")]
+        public List<Link> Links { get; set; } = new List<Link>();
     }
 }

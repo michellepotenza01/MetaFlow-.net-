@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json.Serialization;
+using MetaFlow.API.Enums;
+using MetaFlow.API.Converters;
 
 namespace MetaFlow.API.Models
 {
@@ -23,12 +25,12 @@ namespace MetaFlow.API.Models
         public string Titulo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "A categoria é obrigatória.")]
-        [StringLength(50, ErrorMessage = "A categoria deve ter no máximo 50 caracteres.")]
         [SwaggerSchema("Categoria da meta")]
-        public string Categoria { get; set; } = string.Empty;
+        public CategoriaMeta Categoria { get; set; }
 
         [Required(ErrorMessage = "O prazo é obrigatório.")]
         [SwaggerSchema("Data limite para conclusão")]
+        [JsonConverter(typeof(FlexibleDateTimeConverter))]
         public DateTime Prazo { get; set; }
 
         [Required(ErrorMessage = "O progresso é obrigatório.")]
@@ -36,33 +38,41 @@ namespace MetaFlow.API.Models
         [SwaggerSchema("Progresso atual (0-100%)")]
         public int Progresso { get; set; } = 0;
 
-        [StringLength(1000, ErrorMessage = "A descrição deve ter no máximo 1000 caracteres.")]
-        [SwaggerSchema("Descrição detalhada")]
+        [StringLength(500, ErrorMessage = "A descrição deve ter no máximo 500 caracteres.")]
+        [SwaggerSchema("Descrição detalhada")]  
         public string? Descricao { get; set; }
 
         [SwaggerSchema("Data de criação")]
-        public DateTime CriadoEm { get; set; } = DateTime.Now;
+        public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
         [Required(ErrorMessage = "O status é obrigatório.")]
-        [StringLength(20, ErrorMessage = "O status deve ter no máximo 20 caracteres.")]
         [SwaggerSchema("Status da meta")]
-        public string Status { get; set; } = "Ativa";
+        public StatusMeta Status { get; set; } = StatusMeta.Ativa;
+
+        [NotMapped]
+        [JsonIgnore]
+        public string CategoriaString => Categoria.ToString();
+
+        [NotMapped]
+        [JsonIgnore]
+        public string StatusString => Status.ToString();
 
         [ForeignKey("UsuarioId")]
         [JsonIgnore]
         public virtual Usuario Usuario { get; set; } = null!;
-
-        public void AtualizarStatus()
+        
+        public void AtualizarStatusBaseadoNoProgresso()
         {
             if (Progresso >= 100)
-            {
-                Status = "Concluída";
-            }
+                Status = StatusMeta.Concluida;
+            else if (Status == StatusMeta.Concluida)
+                Status = StatusMeta.Ativa;
         }
 
-        public bool EstaAtrasada()
-        {
-            return DateTime.Now > Prazo && Status != "Concluída";
-        }
+        public bool EstaAtrasada() => DateTime.Now > Prazo && Status != StatusMeta.Concluida;
+
+        public int CalcularDiasRestantes() => Math.Max(0, (Prazo - DateTime.Now).Days);
+
+        public bool PodeSerConcluida() => Status == StatusMeta.Ativa && Progresso >= 100;
     }
 }

@@ -21,8 +21,10 @@ namespace MetaFlow.API.Data
             optionsBuilder.UseOracle(connectionString, options =>
             {
                 options.MigrationsAssembly("MetaFlow.API");
-                options.CommandTimeout(60);
-            });
+                options.CommandTimeout(300);
+                options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            })
+            .AddInterceptors(new OracleCommandInterceptor()); 
 
             return new MetaFlowDbContext(optionsBuilder.Options);
         }

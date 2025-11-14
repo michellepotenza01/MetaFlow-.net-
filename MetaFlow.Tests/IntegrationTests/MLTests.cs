@@ -1,0 +1,65 @@
+using System.Net;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
+
+namespace MetaFlow.Tests.IntegrationTests
+{
+    public class MLTests : IClassFixture<WebApplicationFactory<Program>>
+    {
+        private readonly WebApplicationFactory<Program> _factory;
+
+        public MLTests(WebApplicationFactory<Program> factory)
+        {
+            _factory = factory;
+        }
+
+        [Fact]
+        public async Task GerarRecomendacoes_ReturnsSuccess()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var usuarioId = Guid.NewGuid();
+
+            // Act
+            var response = await client.GetAsync($"/api/v2/recomendacoes/usuario/{usuarioId}");
+
+            // Assert
+            Assert.True(
+                response.StatusCode == HttpStatusCode.OK ||
+                response.StatusCode == HttpStatusCode.BadRequest,
+                $"GET /api/v2/recomendacoes/usuario/ retornou {response.StatusCode}"
+            );
+        }
+
+        [Fact]
+        public async Task StatusServicoML_ReturnsSuccess()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+
+            // Act
+            var response = await client.GetAsync("/api/v2/recomendacoes/status");
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task AnalisarPadroes_ReturnsSuccess()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var usuarioId = Guid.NewGuid();
+
+            // Act
+            var response = await client.GetAsync($"/api/v2/analises/usuario/{usuarioId}/padroes");
+
+            // Assert
+            Assert.True(
+                response.StatusCode == HttpStatusCode.OK ||
+                response.StatusCode == HttpStatusCode.Forbidden,
+                $"GET /api/v2/analises/usuario/padroes retornou {response.StatusCode}"
+            );
+        }
+    }
+}

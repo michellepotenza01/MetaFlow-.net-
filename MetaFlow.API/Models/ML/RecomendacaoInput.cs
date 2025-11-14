@@ -34,6 +34,7 @@ namespace MetaFlow.API.Models.ML
         [SwaggerSchema("Categoria recomendada (codificada)")]
         public float CategoriaRecomendada { get; set; }
 
+        [NoColumn]
         [SwaggerSchema("ID do usuário")]
         public Guid UsuarioId { get; set; }
     }

@@ -103,19 +103,23 @@ namespace MetaFlow.API.Services
 
                     var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
 
-                    var pipeline = _mlContext.Transforms.Concatenate(
-                        "Features", 
-                        nameof(RecomendacaoInput.CategoriaFrequenteEncoded),
-                        nameof(RecomendacaoInput.TaxaConclusaoMedia),
-                        nameof(RecomendacaoInput.DuracaoMediaMetas),
-                        nameof(RecomendacaoInput.ConsistenciaCheckins),
-                        nameof(RecomendacaoInput.MediaProdutividade),
-                        nameof(RecomendacaoInput.MediaHumor))
-                        .Append(_mlContext.Transforms.NormalizeMinMax("Features"))
-                        .Append(_mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy(
-                            labelColumnName: nameof(RecomendacaoInput.CategoriaRecomendada),
-                            featureColumnName: "Features"))
-                        .Append(_mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
+            var pipeline = _mlContext.Transforms.Conversion.MapValueToKey(
+                    outputColumnName: "Label", 
+                    inputColumnName: nameof(RecomendacaoInput.CategoriaRecomendada))
+                .Append(_mlContext.Transforms.Concatenate(
+                    "Features", 
+                    nameof(RecomendacaoInput.CategoriaFrequenteEncoded),
+                    nameof(RecomendacaoInput.TaxaConclusaoMedia),
+                    nameof(RecomendacaoInput.DuracaoMediaMetas),
+                    nameof(RecomendacaoInput.ConsistenciaCheckins),
+                    nameof(RecomendacaoInput.MediaProdutividade),
+                    nameof(RecomendacaoInput.MediaHumor)))
+                .Append(_mlContext.Transforms.NormalizeMinMax("Features"))
+                .Append(_mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy(
+                    labelColumnName: "Label",
+                    featureColumnName: "Features"))
+                .Append(_mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
+    
 
                     _model = pipeline.Fit(dataView);
                     
@@ -192,8 +196,8 @@ namespace MetaFlow.API.Services
         }
 
         private async Task<RecomendacaoInput> CriarInputDoUsuarioAsync(
-            Guid usuarioId, 
-            IMetaRepository metaRepository, 
+            Guid usuarioId,
+            IMetaRepository metaRepository,
             IRegistroDiarioRepository registroRepository)
         {
             try
@@ -210,7 +214,6 @@ namespace MetaFlow.API.Services
 
                 return new RecomendacaoInput
                 {
-                    UsuarioId = usuarioId,
                     CategoriaFrequenteEncoded = categoriaFrequente,
                     TaxaConclusaoMedia = (float)taxaConclusao,
                     DuracaoMediaMetas = (float)duracaoMedia,
@@ -222,8 +225,8 @@ namespace MetaFlow.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao criar input do usuário {UsuarioId}", usuarioId);
-                return new RecomendacaoInput 
-                { 
+                return new RecomendacaoInput
+                {
                     CategoriaFrequenteEncoded = 0f,
                     TaxaConclusaoMedia = 0.5f,
                     DuracaoMediaMetas = 30f,
@@ -233,6 +236,7 @@ namespace MetaFlow.API.Services
                 };
             }
         }
+
 
         private List<RecomendacaoResultado> GerarRecomendacoesBaseadasRegras(RecomendacaoInput input)
         {
